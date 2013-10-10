@@ -9,7 +9,8 @@ function Rocket(eng)
 	this.ctx.lineWidth = 1;
 	this.ctx.strokeStyle = "#ffffff";
 
-	this.maxspeed = 20;
+	this.maxspeed = 10;
+	this.acceleration = 1;
 
 	this.engine = eng;
 
@@ -67,20 +68,29 @@ Rocket.prototype = {
 		if(this.angle > 360) this.angle -= 360;
 		if(this.angle < 0) this.angle += 360;
 
-
 		if(this._trust)
 		{
-			this.xspeed = Math.sin(this.angle) * this.maxspeed;
-			this.yspeed = Math.cos(this.angle) * this.maxspeed;	
+			this.yspeed -= Math.cos(this.angle * Math.PI / 180) * this.acceleration;
+			this.xspeed += Math.sin(this.angle * Math.PI / 180) * this.acceleration;
+
+			if((this.xspeed * this.xspeed + this.yspeed * this.yspeed) > 
+				(this.maxspeed * this.maxspeed)) {
+				this.yspeed = Math.cos(this.angle * Math.PI / 180) * this.maxspeed * -1;
+				this.xspeed = Math.sin(this.angle * Math.PI / 180) * this.maxspeed;
+			}
 		}
 
+		// Increase the coordinate by our current speed
 		this.x += this.xspeed;
+		this.y += this.yspeed;
+
+		// Loop from the edge of the map to the other
 		if(this.x < 0) this.x = this.engine.width;
 		if(this.x > this.engine.width) this.x = 0;
-		this.y += this.yspeed;
 		if(this.y < 0) this.y = this.engine.height;
 		if(this.y > this.engine.height) this.y = 0;
 
+		// End of the tick, clean up
 		this._left = this._right = 0;
 		this._trust = this._fire = false;
 	}
