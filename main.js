@@ -26,6 +26,7 @@ function Rocket(eng)
 
 	this.maxspeed = 10;
 	this.acceleration = 1;
+  this.lastfire = 0;
 
 	this.engine = eng;
 
@@ -107,8 +108,22 @@ Rocket.prototype = {
 	'TurnLeft' : function() { this._left++; },
 	'TurnRight' : function() { this._right++; },
 	'Trust' : function() { this._trust = true; },
-	'Fire' : function() { this.engine.bullets.push(new Bullet(this.x, this.y, this.angle, this.engine)); },
+	'Fire' : function() { 
+    if(this.lastfire == 0) 
+    { 
+      this.engine.bullets.push(new Bullet(this.x, this.y, this.angle, this.engine)); 
+      this.lastfire = 1; 
+    } 
+  },
 	'Tick' : function() {
+
+    if(this.lastfire > 1 && this.lastfire < 5000)
+    {
+      this.lastfire++;
+    } 
+    else {
+      this.lastfire = 0;
+    }
 
 		this.rotate_angle = 0;
 
@@ -166,7 +181,8 @@ function Engine(w, h) {
 	self.clear(); // Clear to black
 	
 	// Set keyboard handler
-	document.body.onkeydown = self.keyhandler;
+	document.body.onkeydown = function(e) {self.keyhandler(e, true); };
+  document.body.onkeyup = function(e) { self.keyhandler(e, false); };
 
 	// Add the canvas to the body
 	document.body.appendChild(self.drawingSurface);
@@ -175,6 +191,7 @@ function Engine(w, h) {
   self.bullets = Array();
 
 	self.Tick = function() {
+    self.TickKeyHandler();
 		self.clear();
 		self.rocket.Tick(); // Propagate the tick
 
@@ -218,7 +235,7 @@ Engine.prototype = {
 	'resume' : function() {
 		self.intervalId = window.setInterval(self.Tick, self.tickrate);
 	},
-	'keyhandler' : function(event) {
+	'keyhandler' : function(event, state) {
 		if(self.intervalId == null)
 		{
 			self.resume();
@@ -228,19 +245,19 @@ Engine.prototype = {
 		{
 			case 32:
 				// Space
-				self.rocket.Fire();
+        self._fire = state;
 				break;
 			case 37: 
 				// Left
-				self.rocket.TurnLeft();
+				self._left = state;
 				break;
 			case 38:
 				// Ùp
-				self.rocket.Trust();
+				self._trust = state;
 				break;
 			case 39:
 				// Right
-				self.rocket.TurnRight();
+				self._right = state;
 				break;
 			case 80:
 			case 112:
@@ -257,7 +274,13 @@ Engine.prototype = {
 			default:
 				return;
 		}
-	}
+	},
+  'TickKeyHandler' : function() {
+    if(self._fire)      self.rocket.Fire();
+    if(self._left && !self._right)      self.rocket.TurnLeft();
+    if(self._right && !self._left)      self.rocket.TurnRight();
+    if(self._trust)   self.rocket.Trust();
+  }
 }
 
 
