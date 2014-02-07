@@ -1,3 +1,18 @@
+function Asteroid(eng) {
+
+  if(typeof(Asteroid.canvas) === 'undefined')
+  {
+    Asteroid.canvas = document.createElement('canvas');
+    Asteroid.canvas.id = 'asteroid';
+    Asteroid.canvas.width = 60;
+    Asteroid.canvas.height = 60;
+    Asteroid.ctx = Asteroid.canvas.getContext("2d");
+    Asteroid.ctx.lineWidth = 1;
+    Asteroid.ctx.strokeStyle = "#ffffff";
+  }
+
+}
+
 function Rocket(eng)
 {
 	this.canvas = document.createElement('canvas');
@@ -17,6 +32,47 @@ function Rocket(eng)
 	this.reset();
 }
 
+function Bullet(x, y, a, eng) {
+  this.x = x;
+  this.y = y;
+  this.angle = a;
+  this.life = 0;
+  this.engine = eng;
+  this.yspeed = Math.cos(this.angle * Math.PI / 180) * -5;
+  this.xspeed = Math.sin(this.angle * Math.PI / 180) * 5;
+}
+
+Bullet.prototype = { 
+ 'getImage' : function () {
+    if(typeof(Bullet.canvas) === 'undefined')
+    {
+      Bullet.canvas = document.createElement('canvas');
+      Bullet.canvas.id = 'bullet';
+      Bullet.canvas.width = 4;
+      Bullet.canvas.height = 4;
+      Bullet.ctx = Bullet.canvas.getContext("2d");
+      Bullet.ctx.fillStyle = 'white';
+      Bullet.ctx.strokeStyle = '#ffffff';
+      Bullet.ctx.lineWidth = 1;
+      Bullet.ctx.beginPath();
+      Bullet.ctx.arc(2,2,2,0,2 * Math.PI, false);
+      Bullet.ctx.fill();
+      Bullet.ctx.stroke();
+    }
+    return Bullet.canvas;
+  },
+  'Tick' : function() {
+    this.x += this.xspeed;
+    if(this.x < 0) this.x += this.engine.width;
+    if(this.x > this.engine.width) this.x -= this.engine.width;
+
+    this.y += this.yspeed;
+    if(this.y < 0) this.y += this.engine.height;
+    if(this.y > this.engine.height) this.y -= this.engine.height;
+
+    this.life++;
+  }
+}
 
 Rocket.prototype = {
 	'reset' : function() {
@@ -51,7 +107,7 @@ Rocket.prototype = {
 	'TurnLeft' : function() { this._left++; },
 	'TurnRight' : function() { this._right++; },
 	'Trust' : function() { this._trust = true; },
-	'Fire' : function() { this._fire = true; },
+	'Fire' : function() { this.engine.bullets.push(new Bullet(this.x, this.y, this.angle, this.engine)); },
 	'Tick' : function() {
 
 		this.rotate_angle = 0;
@@ -116,11 +172,11 @@ function Engine(w, h) {
 	document.body.appendChild(self.drawingSurface);
 	
 	self.rocket = new Rocket(self);
+  self.bullets = Array();
 
 	self.Tick = function() {
 		self.clear();
 		self.rocket.Tick(); // Propagate the tick
-	
 
 		self.ctx.save();
 		self.ctx.translate(self.rocket.x, self.rocket.y);
@@ -128,6 +184,19 @@ function Engine(w, h) {
 		self.ctx.drawImage(self.rocket.canvas, self.rocket.width * -0.5, self.rocket.height * -0.5 - 10);
 		self.ctx.restore();
 		
+    self.bullets.forEach(function(b,i,a) { 
+      b.Tick();
+      if(b.life < 50) {
+        self.ctx.save();
+        self.ctx.translate(b.x, b.y);
+        self.ctx.drawImage(b.getImage(), 0, 0 );
+        self.ctx.restore();
+      } 
+      else 
+      {
+        a.splice(i,1);
+      }
+    });
 	};
 
 	self.tickrate = 30;
@@ -157,7 +226,7 @@ Engine.prototype = {
 		
 		switch(event.which)
 		{
-			case 30:
+			case 32:
 				// Space
 				self.rocket.Fire();
 				break;
