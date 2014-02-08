@@ -24,9 +24,9 @@ function Rocket(eng)
 	this.ctx.lineWidth = 1;
 	this.ctx.strokeStyle = "#ffffff";
 
-	this.maxspeed = 10;
-	this.acceleration = 1;
-  this.lastfire = 0;
+	this.maxspeed = 5;
+	this.acceleration = 0.1;
+	this.lastfire = 0;
 
 	this.engine = eng;
 
@@ -39,8 +39,8 @@ function Bullet(x, y, a, eng) {
   this.angle = a;
   this.life = 0;
   this.engine = eng;
-  this.yspeed = Math.cos(this.angle * Math.PI / 180) * -5;
-  this.xspeed = Math.sin(this.angle * Math.PI / 180) * 5;
+  this.yspeed = Math.cos(this.angle * Math.PI / 180) * -6;
+  this.xspeed = Math.sin(this.angle * Math.PI / 180) * 6;
 }
 
 Bullet.prototype = { 
@@ -109,21 +109,19 @@ Rocket.prototype = {
 	'TurnRight' : function() { this._right++; },
 	'Trust' : function() { this._trust = true; },
 	'Fire' : function() { 
-    if(this.lastfire == 0) 
-    { 
-      this.engine.bullets.push(new Bullet(this.x, this.y, this.angle, this.engine)); 
-      this.lastfire = 1; 
-    } 
-  },
+		if(this.lastfire == 0) 
+		{ 
+			this.engine.bullets.push(new Bullet(this.x, this.y, this.angle, this.engine)); 
+			this.lastfire = 1; 
+		} 
+	},
 	'Tick' : function() {
 
-    if(this.lastfire > 1 && this.lastfire < 5000)
-    {
-      this.lastfire++;
-    } 
-    else {
-      this.lastfire = 0;
-    }
+	    if(this.lastfire > 1 && this.lastfire < 5000) {
+			this.lastfire++;
+		} else {
+			this.lastfire = 0;
+		}
 
 		this.rotate_angle = 0;
 
@@ -182,16 +180,16 @@ function Engine(w, h) {
 	
 	// Set keyboard handler
 	document.body.onkeydown = function(e) {self.keyhandler(e, true); };
-  document.body.onkeyup = function(e) { self.keyhandler(e, false); };
+	document.body.onkeyup = function(e) { self.keyhandler(e, false); };
 
 	// Add the canvas to the body
 	document.body.appendChild(self.drawingSurface);
 	
 	self.rocket = new Rocket(self);
-  self.bullets = Array();
+	self.bullets = Array();
 
 	self.Tick = function() {
-    self.TickKeyHandler();
+		self.TickKeyHandler();
 		self.clear();
 		self.rocket.Tick(); // Propagate the tick
 
@@ -201,19 +199,17 @@ function Engine(w, h) {
 		self.ctx.drawImage(self.rocket.canvas, self.rocket.width * -0.5, self.rocket.height * -0.5 - 10);
 		self.ctx.restore();
 		
-    self.bullets.forEach(function(b,i,a) { 
-      b.Tick();
-      if(b.life < 50) {
-        self.ctx.save();
-        self.ctx.translate(b.x, b.y);
-        self.ctx.drawImage(b.getImage(), 0, 0 );
-        self.ctx.restore();
-      } 
-      else 
-      {
-        a.splice(i,1);
-      }
-    });
+	    self.bullets.forEach(function(b,i,a) { 
+	      b.Tick();
+	      if(b.life < 50) {
+	        self.ctx.save();
+	        self.ctx.translate(b.x, b.y);
+	        self.ctx.drawImage(b.getImage(), -2, -2 );
+	        self.ctx.restore();
+	      } else {
+	        a.splice(i,1);
+	      }
+	    });
 	};
 
 	self.tickrate = 30;
