@@ -26,7 +26,6 @@ function Rocket(eng)
 
 	this.maxspeed = 5;
 	this.acceleration = 0.1;
-	this.lastfire = 0;
 
 	this.engine = eng;
 
@@ -108,20 +107,10 @@ Rocket.prototype = {
 	'TurnLeft' : function() { this._left++; },
 	'TurnRight' : function() { this._right++; },
 	'Trust' : function() { this._trust = true; },
-	'Fire' : function() { 
-		if(this.lastfire == 0) 
-		{ 
-			this.engine.bullets.push(new Bullet(this.x, this.y, this.angle, this.engine)); 
-			this.lastfire = 1; 
-		} 
+	'Fire' : function() {
+		this.engine.bullets.push(new Bullet(this.x, this.y, this.angle, this.engine)); 
 	},
 	'Tick' : function() {
-
-	    if(this.lastfire > 1 && this.lastfire < 5000) {
-			this.lastfire++;
-		} else {
-			this.lastfire = 0;
-		}
 
 		this.rotate_angle = 0;
 
@@ -170,6 +159,8 @@ function Engine(w, h) {
 	self.width = w;
 	self.height = h;
 
+	self.tick = 0;
+
 	// Set drawing surface
 	self.drawingSurface = document.createElement('canvas');
 	self.drawingSurface.id = 'dsurface';
@@ -210,6 +201,9 @@ function Engine(w, h) {
 	        a.splice(i,1);
 	      }
 	    });
+
+		self.tick++;
+		if(self.tick == 10) self.tick = 0;
 	};
 
 	self.tickrate = 30;
@@ -241,7 +235,7 @@ Engine.prototype = {
 		{
 			case 32:
 				// Space
-        self._fire = state;
+	        self._fire = state;
 				break;
 			case 37: 
 				// Left
@@ -272,7 +266,7 @@ Engine.prototype = {
 		}
 	},
   'TickKeyHandler' : function() {
-    if(self._fire)      self.rocket.Fire();
+    if(self._fire && self.tick == 0) self.rocket.Fire();
     if(self._left && !self._right)      self.rocket.TurnLeft();
     if(self._right && !self._left)      self.rocket.TurnRight();
     if(self._trust)   self.rocket.Trust();
